@@ -3,7 +3,7 @@ title: AA-Calc
 email: n@ncrocker.codes
 description: > # this means to ignore newlines until "baseurl:"
   Alternate Air W/B Calculator
-baseurl: "/aacalc" # the subpath of your site, e.g. /blog/
+baseurl: "/AACalc" # the subpath of your site, e.g. /blog/
 url: "http://vertigoetrex.github.io" # the base hostname & protocol for your site
 projurl: "https://github.com/vertigoetrex/aacalc"
 github: "https://github.com/vertigoetrex"

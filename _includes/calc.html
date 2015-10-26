@@ -1,0 +1,159 @@
+{% if backseatarm %}
+  {% assign backseat = true %}
+{% else %}
+  {% assign backseatarm = 0 %}
+  {% assign backseat = false %}
+{% endif %}
+
+<h3><a id="calculator" class="anchor" href="#calculator" aria-hidden="true"><span class="octicon octicon-link"></span></a>Calculator</h3>
+<script type="text/javascript">
+  jQuery(function ($) {
+    $("#fuel").change(function(){
+      $("#fuelload").html($("#fuel").val()*6); //6lbs is constant for 100LL fuel
+    });
+    $("#calc").click(function(){
+      front = parseFloat($("#front").val());
+      {% if backseat %}
+      rear = parseFloat($("#rear").val());
+      {% else %}
+      rear = 0;
+      {% endif %}
+      baga = parseFloat($("#baga").val());
+      bagb = parseFloat($("#bagb").val());
+      fuel = parseFloat($("#fuel").val());
+      fuelburn = parseFloat($("#fuelburn").val());
+      flighttime = parseFloat($("#flighttime").val());
+      fuellanding = (fuel*6) - ((fuelburn * flighttime)*6);
+
+      empty = Math.ceil(parseFloat({{emptyweight}}) * 10) / 10;
+      gross = front + rear + baga + bagb + fuel*6 + empty;
+      landing = front + rear + baga + bagb + fuellanding + empty;
+
+      emptym = empty * parseFloat({{emptyarm}});
+      frontm = front * parseFloat({{frontseatarm}});
+      rearm = rear * parseFloat({{ backseatarm }});
+      bagam = baga * parseFloat({{bagaarm}});
+      bagbm = bagb * parseFloat({{bagbarm}});
+      fuelm = (fuel*6) * parseFloat({{fuelarm}});
+      fuellandm = fuellanding * parseFloat({{fuelarm}});
+      totalm = frontm + rearm + bagam + bagbm + fuelm + emptym;
+      totalmlanding = frontm + rearm + bagam + bagbm + fuellandm + emptym;
+
+      loadcg = Math.round((totalm / gross)*100)/100;
+      loadcglanding = Math.round((totalmlanding / landing)*100)/100;
+
+      $("#calccg").html('<center>'+loadcg+'</center>');
+      $("#calccglanding").html('<center>'+loadcglanding+'</center>');
+
+      $("#calcgross").html('<center>'+gross+'</center>');
+
+      $("#calclanding").html('<center>'+landing+'</center>');
+
+      if (gross <= {{maxweight}}){
+        $("#calcgross").css("background-color","green");
+        $("#calcgross").css("color","white");
+        $("#calcgross").css("font-size","16px");
+        $("#calcgross").css("font-weight","bold");
+      }else{
+        diff = gross - {{maxweight}};
+        rem = Math.ceil(diff / 6);
+        alert('OVER MAX TAKE OFF WEIGHT \n\nTry removing '+rem+' gallons of gasoline or '+diff+' lbs of load')
+        $("#calcgross").css("background-color","red");
+        $("#calcgross").css("color","white");
+        $("#calcgross").css("font-size","16px");
+        $("#calcgross").css("font-weight","bold");
+      }
+
+      if (landing <= {{maxweight}}){
+        $("#calclanding").css("background-color","green");
+        $("#calclanding").css("color","white");
+        $("#calclanding").css("font-size","16px");
+        $("#calclanding").css("font-weight","bold");
+      }else{
+        diff1 = landing - {{maxweight}};
+        rem = Math.ceil(diff1 / 6);
+        alert('OVER MAX LANDING WEIGHT \n\nTry removing '+rem+' gallons of gasoline or '+diff1+' lbs of load');
+        $("#calclanding").css("background-color","red");
+        $("#calclanding").css("color","white");
+        $("#calclanding").css("font-size","16px");
+        $("#calclanding").css("font-weight","bold");
+      }
+
+      $("#calcva").html('<center>'+Math.round(105 * (Math.sqrt(gross / {{maxweight}})))+' kts @ '+gross+' lbs</center>'); //<!-- todo -->
+      $("#calcvaland").html('<center>'+Math.round(105 * (Math.sqrt(landing / {{maxweight}})))+' kts @ '+landing+' lbs</center>'); //<!-- todo -->
+
+      $('#chart-div').highcharts({
+              chart: {
+                  type: 'line'
+              },
+            title: {
+                text: 'Center Of Gravity Envelope'
+            },
+            xAxis: {
+                categories: ['CG (inches)'],
+                title: {
+                  text: 'CG (inches)'
+                },
+            },
+            yAxis: {
+                title: {
+                  text: 'Weight (lbs)'
+                },
+                min: {{minweight}}
+            },
+            plotOptions: {
+                series: {
+                    marker: {
+                        enabled: true
+                    }
+                }
+            },
+            series: [{
+              type: 'line',
+                name: 'Takeoff CG',
+                data: [[loadcg,gross]],
+                marker: {
+                      radius: 8
+                  }
+
+              },{
+              type: 'line',
+                name: 'CG Envelope',
+                data: {{envelope}}
+              },{
+              type: 'line',
+                name: 'Landing CG',
+                data: [[loadcglanding,landing]],
+                marker: {
+                      radius: 6
+                  }
+
+              }
+              ]
+        });
+      });
+    });
+</script>
+
+<center><h4><b>{{type}}</b><br /><b>{{tail}}</b></h4></center>
+<table style="width:75%;margin:0 auto;">
+<tr><td colspan="2">Updated: 10/25/2015</td><td><b>Weight (lbs)</b></td><td><b>Arm (inches)</b></td></tr>
+<tr><td colspan="2"><b>Empty Weight</b></td><td>{{emptyweight}}</td><td>{{emptyarm}}</td></tr>
+<tr><td colspan="2"><b>Front Seats</b></td><td style="background-color:#faf8cb"><input type="number" id="front" name="frontseats" max="999" value="0" style="max-width: 50px"></td><td>{{frontseatarm}}</td></tr>
+{% if backseat %}
+  <tr><td colspan="2"><b>Rear Seats</b></td><td style="background-color:#faf8cb"><input type="number" id="rear" name="rearseats" max="999" value="0" style="max-width: 50px"></td><td>{{backseatarm}}</td></tr>
+{% endif %}
+<tr><td colspan="2"><b>Baggage A</b></td><td style="background-color:#faf8cb"><input type="number" id="baga" name="bagaseats" max="999" value="0" style="max-width: 50px"></td><td>{{bagaarm}}</td></tr>
+<tr><td colspan="2"><b>Baggage B</b></td><td style="background-color:#faf8cb"><input type="number" id="bagb" name="bagbseats" max="999" value="0" style="max-width: 50px"></td><td>{{bagbarm}}</td></tr>
+<tr><td><b>Fuel Usable</b><br>({{maxfuel}} gal max)</td><td style="background-color:#faf8cb"><input type="number" name="fuel" id="fuel" max="{{maxfuel}}" value="{{maxfuel}}" style="max-width: 50px">gal</td><td><div id="fuelload">{{maxfuel | times:6}}</div></td><td>{{fuelarm}}</td></tr>
+<tr><td colspan="2"><b>Fuel Consumption</b></td><td style="background-color:#faf8cb"><b>Flight Time</b><br><input type="number" id="flighttime" name="flighttime" max="999" value="0" style="max-width: 50px">hrs</td><td style="background-color:#faf8cb"><b>Fuel Burn</b><br><input type="number" id="fuelburn" style="max-width: 50px" name="fuelburn" max="999" value="0">gph</td></tr>
+<tr><td colspan="4"><center><button class="styled-button" id="calc">Calculate</button><center></td></tr>
+</table>
+<center><b><h4>Results</h4></b></center>
+<table style="width:75%;margin:0 auto;">
+<tr><td></td><td><center><b>Takeoff</b></center></td><td><center><b>Landing</b></center></td></tr>
+<tr><td><b>Gross Weight</b><br>({{maxweight}} lbs max takeoff)</td><td id="calcgross"></td><td id="calclanding"></td><tr>
+<tr><td><b>Center of Gravity (inches)</b></td><td id="calccg"></td><td id="calccglanding"></td><tr>
+    <tr><td><b>Maneuvering Speed</b><br>({{maxwtmanuver}} kts @ {{maxweight}} lbs)</td><td id="calcva"></td><td id="calcvaland"></td><tr> <!-- todo -->
+</table>
+<br /><div id="chart-div" style="width:600px; height:400px;margin:0 auto;"></div>

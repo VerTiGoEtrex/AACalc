@@ -1,0 +1,11 @@
+<section class="page-header">
+  <h1 class="project-name">{{ site.title }}</h1>
+  <h2 class="project-tagline">{{ site.description }}</h2>
+  {% for page in site.pages %}
+    {% if page.title %}
+    <a class="btn" href="{{ page.url | prepend: site.baseurl }}">{{ page.title }}</a>
+    {% endif %}
+  {% endfor %}
+  </br>
+  <a href="http://www.alternateair.net/" class="btn">Back to Alternate Air</a>
+</section>
